@@ -1,0 +1,39 @@
+<UserControl x:Class="SysPilot.Controls.GaugeControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="120" d:DesignWidth="120">
+
+    <Grid Width="120" Height="120">
+        <!-- Background Arc -->
+        <Path x:Name="BackgroundArc"
+              Stroke="#2A2A2A"
+              StrokeThickness="8"
+              StrokeStartLineCap="Round"
+              StrokeEndLineCap="Round"/>
+
+        <!-- Value Arc -->
+        <Path x:Name="ValueArc"
+              StrokeThickness="8"
+              StrokeStartLineCap="Round"
+              StrokeEndLineCap="Round"/>
+
+        <!-- Center content -->
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock x:Name="ValueText"
+                       Text="0%"
+                       Foreground="#E0E0E0"
+                       FontSize="22"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"/>
+            <TextBlock x:Name="LabelText"
+                       Text="CPU"
+                       Foreground="#808080"
+                       FontSize="11"
+                       HorizontalAlignment="Center"
+                       Margin="0,-2,0,0"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

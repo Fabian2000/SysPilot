@@ -1,0 +1,242 @@
+<Window x:Class="SysPilot.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SysPilot"
+        xmlns:controls="clr-namespace:SysPilot.Controls"
+        xmlns:pages="clr-namespace:SysPilot.Pages"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                mc:Ignorable="d"
+        Title="{x:Static local:Lang.AppTitle}"
+        Height="700" Width="1000"
+        MinHeight="500" MinWidth="700"
+        Background="#1A1A1A"
+        WindowStartupLocation="CenterScreen"
+        Icon="icon.ico">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid Background="#1A1A1A">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar (Full Height) -->
+        <Border Grid.Column="0" Background="#1E1E1E">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Sidebar Title Bar Area -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                    <Image Source="icon.png"
+                           Width="20" Height="20"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           VerticalAlignment="Center"/>
+                    <TextBlock Text="SysPilot"
+                               Foreground="#E0E0E0"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"/>
+                    <iconPacks:PackIconMaterial x:Name="AdminShield"
+                                                Kind="Shield"
+                                                Width="14" Height="14"
+                                                Foreground="#FFD700"
+                                                VerticalAlignment="Center"
+                                                Margin="6,0,0,0"
+                                                ToolTip="{x:Static local:Lang.RunningAsAdmin}"
+                                                Visibility="Collapsed"/>
+                </StackPanel>
+
+                <!-- Navigation Buttons -->
+                <StackPanel Grid.Row="1" Margin="0,16,0,0">
+                        <controls:SidebarButton x:Name="NavDashboard"
+                                                Label="{x:Static local:Lang.NavDashboard}"
+                                                PageType="{x:Type pages:DashboardPage}"
+                                                IsSelected="True"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="ViewDashboardOutline"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavPerformance"
+                                                Label="{x:Static local:Lang.NavPerformance}"
+                                                PageType="{x:Type pages:PerformancePage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="ChartLine"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavTasks"
+                                                Label="{x:Static local:Lang.NavTasks}"
+                                                PageType="{x:Type pages:TaskManagerPage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="FormatListChecks"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavAutostart"
+                                                Label="{x:Static local:Lang.NavAutostart}"
+                                                PageType="{x:Type pages:AutostartPage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="RocketLaunchOutline"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavServices"
+                                                Label="{x:Static local:Lang.NavServices}"
+                                                PageType="{x:Type pages:ServicesPage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="CogSync"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavNetwork"
+                                                Label="{x:Static local:Lang.NavNetwork}"
+                                                PageType="{x:Type pages:NetworkPage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="Lan"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavCleanup"
+                                                Label="{x:Static local:Lang.NavCleanup}"
+                                                PageType="{x:Type pages:CleanupPage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="Broom"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavPrograms"
+                                                Label="{x:Static local:Lang.NavPrograms}"
+                                                PageType="{x:Type pages:InstalledProgramsPage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="Apps"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavHardware"
+                                                Label="{x:Static local:Lang.NavHardware}"
+                                                PageType="{x:Type pages:HardwareInfoPage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="Cpu64Bit"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+
+                        <controls:SidebarButton x:Name="NavPower"
+                                                Label="{x:Static local:Lang.NavPower}"
+                                                PageType="{x:Type pages:PowerPage}"
+                                                Selected="NavButton_Selected">
+                            <controls:SidebarButton.Icon>
+                                <iconPacks:PackIconMaterial Kind="Power"
+                                                            Width="18" Height="18"
+                                                            Foreground="#808080"/>
+                            </controls:SidebarButton.Icon>
+                        </controls:SidebarButton>
+                    </StackPanel>
+
+                    <!-- Footer -->
+                    <StackPanel Grid.Row="2" Margin="16,0,16,16">
+                        <Separator Background="#2A2A2A" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="VersionText"
+                                   Foreground="#404040"
+                                   FontSize="11"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        <!-- Right Side (Title Bar + Content) -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar (Right Side Only) -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Window Control Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Stretch">
+                    <Button x:Name="BtnPin"
+                            Click="BtnPin_Click"
+                            ToolTip="{x:Static local:Lang.PinOnTop}"
+                            Style="{StaticResource WindowControlButton}">
+                        <iconPacks:PackIconMaterial x:Name="PinIcon" Kind="PinOutline" Width="12" Height="12"/>
+                    </Button>
+
+                    <Button x:Name="BtnMinimize"
+                            Command="{x:Static SystemCommands.MinimizeWindowCommand}"
+                            Style="{StaticResource WindowControlButton}">
+                        <iconPacks:PackIconMaterial Kind="WindowMinimize" Width="12" Height="12"/>
+                    </Button>
+
+                    <Button x:Name="BtnMaximize"
+                            Command="{x:Static SystemCommands.MaximizeWindowCommand}"
+                            Style="{StaticResource WindowControlButton}">
+                        <iconPacks:PackIconMaterial Kind="WindowMaximize" Width="12" Height="12"/>
+                    </Button>
+
+                    <Button x:Name="BtnRestore"
+                            Command="{x:Static SystemCommands.RestoreWindowCommand}"
+                            Style="{StaticResource WindowControlButton}"
+                            Visibility="Collapsed">
+                        <iconPacks:PackIconMaterial Kind="WindowRestore" Width="12" Height="12"/>
+                    </Button>
+
+                    <Button x:Name="BtnClose"
+                            Command="{x:Static SystemCommands.CloseWindowCommand}"
+                            Style="{StaticResource WindowCloseButton}">
+                        <iconPacks:PackIconMaterial Kind="WindowClose" Width="12" Height="12"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Page Content -->
+            <Frame x:Name="ContentFrame"
+                   Grid.Row="1"
+                   NavigationUIVisibility="Hidden"
+                   Background="#1A1A1A"
+                   Margin="20,0,0,0"/>
+        </Grid>
+    </Grid>
+</Window>

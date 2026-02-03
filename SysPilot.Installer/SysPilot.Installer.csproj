@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- NativeAOT: Echte native exe ohne .NET Runtime -->
+    <PublishAot>true</PublishAot>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+
+    <!-- Windows Manifest für Admin + DPI -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- Icon -->
+    <ApplicationIcon>..\icon.ico</ApplicationIcon>
+
+    <RootNamespace>SysPilot.Installer</RootNamespace>
+    <AssemblyName>SysPilotSetup</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Embed icon.png for logo display -->
+    <EmbeddedResource Include="..\icon.png" LogicalName="icon.png" />
+  </ItemGroup>
+
+  <!-- Payload.zip wird von PowerShell erstellt -->
+  <Target Name="IncludePayload" BeforeTargets="BeforeBuild" Condition="Exists('Resources\Payload.zip')">
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\Payload.zip" />
+    </ItemGroup>
+  </Target>
+
+</Project>

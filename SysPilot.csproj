@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Installer/Uninstaller-Projekte vom Build ausschließen -->
+  <ItemGroup>
+    <Compile Remove="SysPilot.Installer\**" />
+    <None Remove="SysPilot.Installer\**" />
+    <EmbeddedResource Remove="SysPilot.Installer\**" />
+    <Compile Remove="SysPilot.Uninstaller\**" />
+    <None Remove="SysPilot.Uninstaller\**" />
+    <EmbeddedResource Remove="SysPilot.Uninstaller\**" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <Version>3.0.0</Version>
+    <RootNamespace>SysPilot</RootNamespace>
+    <AssemblyName>SysPilot</AssemblyName>
+    <!-- Keine Satelliten-Assemblies von NuGet-Paketen (eigenes Lokalisierungssystem) -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="icon.png" />
+    <Resource Include="icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="lang\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="5.0.0" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0" />
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+    <PackageReference Include="System.Management" Version="9.0.0" />
+    <PackageReference Include="TaskScheduler" Version="2.11.0" />
+  </ItemGroup>
+
+  <!-- Generate AppInfo.cs with version at compile time -->
+  <Target Name="GenerateAppInfo" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <AppInfoFile>$(IntermediateOutputPath)AppInfo.g.cs</AppInfoFile>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(AppInfoFile)" Overwrite="true" Lines="
+namespace SysPilot%3B
+
+public static class AppInfo
+{
+    public const string Version = &quot;$(Version)&quot;%3B
+}
+" />
+    <ItemGroup>
+      <Compile Include="$(AppInfoFile)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
