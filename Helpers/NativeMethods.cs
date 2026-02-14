@@ -30,6 +30,16 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool ExitWindowsEx(uint uFlags, uint dwReason);
 
+    [LibraryImport("advapi32.dll", EntryPoint = "InitiateSystemShutdownExW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool InitiateSystemShutdownEx(
+        string? lpMachineName,
+        string? lpMessage,
+        uint dwTimeout,
+        [MarshalAs(UnmanagedType.Bool)] bool bForceAppsClosed,
+        [MarshalAs(UnmanagedType.Bool)] bool bRebootAfterShutdown,
+        uint dwReason);
+
     [LibraryImport("powrprof.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SetSuspendState(
@@ -44,7 +54,7 @@ internal static partial class NativeMethods
         uint DesiredAccess,
         out nint TokenHandle);
 
-    [LibraryImport("advapi32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    [LibraryImport("advapi32.dll", EntryPoint = "LookupPrivilegeValueW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool LookupPrivilegeValue(
         string? lpSystemName,

@@ -1,5 +1,6 @@
 using System.Management;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
 namespace SysPilot.Helpers;
@@ -172,6 +173,40 @@ public static class HardwareHelper
         var gpus = new List<GpuInfo>();
         try
         {
+            // Read accurate VRAM sizes from registry (64-bit values, no 4 GB cap)
+            var registryVram = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                using var classKey = Registry.LocalMachine.OpenSubKey(
+                    @"SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}");
+                if (classKey is not null)
+                {
+                    foreach (var subKeyName in classKey.GetSubKeyNames())
+                    {
+                        // Only check numbered subkeys (0000, 0001, etc.)
+                        if (!int.TryParse(subKeyName, out _)) continue;
+                        try
+                        {
+                            using var subKey = classKey.OpenSubKey(subKeyName);
+                            if (subKey is null) continue;
+
+                            var desc = subKey.GetValue("DriverDesc")?.ToString() ?? "";
+                            var qwMem = subKey.GetValue("HardwareInformation.qwMemorySize");
+                            if (qwMem is long memLong && memLong > 0 && !string.IsNullOrEmpty(desc))
+                            {
+                                registryVram[desc] = memLong;
+                            }
+                            else if (qwMem is byte[] memBytes && memBytes.Length >= 8 && !string.IsNullOrEmpty(desc))
+                            {
+                                registryVram[desc] = BitConverter.ToInt64(memBytes, 0);
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch { }
+
             using var searcher = new ManagementObjectSearcher(
                 "SELECT Name, AdapterCompatibility, DriverVersion, AdapterRAM, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate FROM Win32_VideoController");
             foreach (var obj in searcher.Get())
@@ -183,8 +218,16 @@ public static class HardwareHelper
                     DriverVersion = obj["DriverVersion"]?.ToString() ?? ""
                 };
 
-                var vram = Convert.ToInt64(obj["AdapterRAM"] ?? 0);
-                gpu.VideoMemory = vram > 0 ? SystemHelper.FormatBytes(vram) : "";
+                // Prefer registry 64-bit VRAM value, fall back to WMI (which caps at ~4 GB)
+                if (registryVram.TryGetValue(gpu.Name, out var regVram) && regVram > 0)
+                {
+                    gpu.VideoMemory = SystemHelper.FormatBytes(regVram);
+                }
+                else
+                {
+                    var vram = Convert.ToInt64(obj["AdapterRAM"] ?? 0);
+                    gpu.VideoMemory = vram > 0 ? SystemHelper.FormatBytes(vram) : "";
+                }
 
                 var hRes = Convert.ToInt32(obj["CurrentHorizontalResolution"] ?? 0);
                 var vRes = Convert.ToInt32(obj["CurrentVerticalResolution"] ?? 0);
@@ -194,7 +237,18 @@ public static class HardwareHelper
                 }
 
                 var refresh = Convert.ToInt32(obj["CurrentRefreshRate"] ?? 0);
-                gpu.RefreshRate = refresh > 0 ? $"{refresh} Hz" : "";
+                if (refresh > 0)
+                {
+                    var maxRefresh = GetMaxRefreshRate(hRes, vRes);
+                    if (maxRefresh > refresh)
+                    {
+                        gpu.RefreshRate = $"{maxRefresh} Hz (Dynamic)";
+                    }
+                    else
+                    {
+                        gpu.RefreshRate = $"{refresh} Hz";
+                    }
+                }
 
                 gpus.Add(gpu);
             }
@@ -242,25 +296,54 @@ public static class HardwareHelper
                 break;
             }
 
-            // Check UEFI mode
+            // Detect boot mode via firmware_type environment variable (most reliable)
             var firmwareType = Environment.GetEnvironmentVariable("firmware_type");
-            bios.Mode = Environment.GetFolderPath(Environment.SpecialFolder.System).Contains("EFI") ? "UEFI" : "Legacy";
+            var isUefi = string.Equals(firmwareType, "UEFI", StringComparison.OrdinalIgnoreCase);
 
-            // Better detection via registry
-            try
+            if (isUefi)
             {
-                using var key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
-                if (key is not null)
+                // Check Secure Boot status
+                var secureBootEnabled = false;
+                try
                 {
+                    using var sbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
+                    if (sbKey is not null)
+                    {
+                        var val = sbKey.GetValue("UEFISecureBootEnabled");
+                        secureBootEnabled = val is int intVal && intVal == 1;
+                    }
+                }
+                catch { }
+
+                // Detect CSM: SMBIOS 2.x on a UEFI system without Secure Boot strongly indicates CSM is active
+                var csmLikely = false;
+                if (!secureBootEnabled)
+                {
+                    try
+                    {
+                        using var biosQuery = new ManagementObjectSearcher(
+                            "SELECT SMBIOSMajorVersion FROM Win32_BIOS");
+                        foreach (var biosObj in biosQuery.Get())
+                        {
+                            var smbiosMajor = Convert.ToInt32(biosObj["SMBIOSMajorVersion"] ?? 0);
+                            csmLikely = smbiosMajor > 0 && smbiosMajor < 3;
+                            break;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (secureBootEnabled)
                     bios.Mode = "UEFI (Secure Boot)";
-                }
+                else if (csmLikely)
+                    bios.Mode = "UEFI (CSM)";
                 else
-                {
-                    using var key2 = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\EFI");
-                    bios.Mode = key2 is not null ? "UEFI" : "Legacy";
-                }
+                    bios.Mode = "UEFI";
             }
-            catch { }
+            else
+            {
+                bios.Mode = "Legacy";
+            }
         }
         catch { }
         return bios;
@@ -502,5 +585,59 @@ public static class HardwareHelper
         }
         catch { }
         return os;
+    }
+
+    private static int GetMaxRefreshRate(int width, int height)
+    {
+        try
+        {
+            int maxHz = 0;
+            var dm = new DEVMODE();
+            dm.dmSize = (short)Marshal.SizeOf<DEVMODE>();
+
+            for (int i = 0; EnumDisplaySettingsW(null, i, ref dm); i++)
+            {
+                if (dm.dmPelsWidth == width && dm.dmPelsHeight == height && dm.dmDisplayFrequency > maxHz)
+                {
+                    maxHz = dm.dmDisplayFrequency;
+                }
+            }
+
+            return maxHz;
+        }
+        catch { }
+        return 0;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern bool EnumDisplaySettingsW(string? deviceName, int modeNum, ref DEVMODE devMode);
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct DEVMODE
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmDeviceName;
+        public short dmSpecVersion;
+        public short dmDriverVersion;
+        public short dmSize;
+        public short dmDriverExtra;
+        public int dmFields;
+        public int dmPositionX;
+        public int dmPositionY;
+        public int dmDisplayOrientation;
+        public int dmDisplayFixedOutput;
+        public short dmColor;
+        public short dmDuplex;
+        public short dmYResolution;
+        public short dmTTOption;
+        public short dmCollate;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmFormName;
+        public short dmLogPixels;
+        public int dmBitsPerPel;
+        public int dmPelsWidth;
+        public int dmPelsHeight;
+        public int dmDisplayFlags;
+        public int dmDisplayFrequency;
     }
 }

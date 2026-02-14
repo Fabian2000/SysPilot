@@ -19,7 +19,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <Version>3.0.0</Version>
+    <Version>3.0.1</Version>
     <RootNamespace>SysPilot</RootNamespace>
     <AssemblyName>SysPilot</AssemblyName>
     <!-- Keine Satelliten-Assemblies von NuGet-Paketen (eigenes Lokalisierungssystem) -->
